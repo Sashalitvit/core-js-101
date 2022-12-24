@@ -1,156 +1,113 @@
 /* ************************************************************************************************
  *                                                                                                *
  * Plese read the following tutorial before implementing tasks:                                   *
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer *
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object        *
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise       *
  *                                                                                                *
  ************************************************************************************************ */
 
 
 /**
- * Returns the rectagle object with width and height parameters and getArea() method
+ * Return Promise object that is resolved with string value === 'Hooray!!! She said "Yes"!',
+ * if boolean value === true is passed, resolved with string value === 'Oh no, she said "No".',
+ * if boolean value === false is passed, and rejected
+ * with error message === 'Wrong parameter is passed! Ask her again.',
+ * if is not boolean value passed
  *
- * @param {number} width
- * @param {number} height
- * @return {Object}
+ * @param {boolean} isPositiveAnswer
+ * @return {Promise}
  *
  * @example
- *    const r = new Rectangle(10,20);
- *    console.log(r.width);       // => 10
- *    console.log(r.height);      // => 20
- *    console.log(r.getArea());   // => 200
+ *    const p1 = willYouMarryMe(true);
+ *    p1.then(answer => console.log(answer)) // 'Hooray!!! She said "Yes"!'
+ *
+ *    const p2 = willYouMarryMe(false);
+ *    p2.then(answer => console.log(answer)) // 'Oh no, she said "No".';
+ *
+ *    const p3 = willYouMarryMe();
+ *    p3.then(answer => console.log(answer))
+ *      .catch((error) => console.log(error.message)) // 'Error: Wrong parameter is passed!
+ *                                                    //  Ask her again.';
  */
-class Rectangle {
-  constructor(width, height) {
-    this.width = width;
-    this.height = height;
-  }
-
-  getArea() {
-    return this.width * this.height;
-  }
+function willYouMarryMe(isPositiveAnswer) {
+  return new Promise((resolve, reject) => {
+    if (isPositiveAnswer === undefined) {
+      reject(new Error('Wrong parameter is passed! Ask her again.'));
+    }
+    if (isPositiveAnswer) {
+      resolve('Hooray!!! She said "Yes"!');
+    } else {
+      resolve('Oh no, she said "No".');
+    }
+  });
 }
 
 
 /**
- * Returns the JSON representation of specified object
+ * Return Promise object that should be resolved with array containing plain values.
+ * Function receive an array of Promise objects.
  *
- * @param {object} obj
- * @return {string}
+ * @param {Promise[]} array
+ * @return {Promise}
  *
  * @example
- *    [1,2,3]   =>  '[1,2,3]'
- *    { width: 10, height : 20 } => '{"height":10,"width":20}'
+ *    const promises = [Promise.resolve(1), Promise.resolve(3), Promise.resolve(12)]
+ *    const p = processAllPromises(promises);
+ *    p.then((res) => {
+ *      console.log(res) // => [1, 2, 3]
+ *    })
+ *
  */
-function getJSON(obj) {
-  return JSON.stringify(obj);
+function processAllPromises(array) {
+  return Promise.all(array);
 }
 
-
 /**
- * Returns the object of specified type from JSON representation
+ * Return Promise object that should be resolved with value received from
+ * Promise object that will be resolved first.
+ * Function receive an array of Promise objects.
  *
- * @param {Object} proto
- * @param {string} json
- * @return {object}
+ * @param {Promise[]} array
+ * @return {Promise}
  *
  * @example
- *    const r = fromJSON(Circle.prototype, '{"radius":10}');
+ *    const promises = [
+ *      Promise.resolve('first'),
+ *      new Promise(resolve => setTimeout(() => resolve('second'), 500)),
+ *    ];
+ *    const p = processAllPromises(promises);
+ *    p.then((res) => {
+ *      console.log(res) // => [first]
+ *    })
  *
  */
-function fromJSON(proto, json) {
-  return Object.assign(Object.create(proto), JSON.parse(json));
+function getFastestPromise(array) {
+  return Promise.race(array);
 }
 
-
 /**
- * Css selectors builder
+ * Return Promise object that should be resolved with value that is
+ * a result of action with values of all the promises that exists in array.
+ * If some of promise is rejected you should catch it and process the next one.
  *
- * Each complex selector can consists of type, id, class, attribute, pseudo-class
- * and pseudo-element selectors:
- *
- *    element#id.class[attr]:pseudoClass::pseudoElement
- *              \----/\----/\----------/
- *              Can be several occurences
- *
- * All types of selectors can be combined using the combinators ' ','+','~','>' .
- *
- * The task is to design a single class, independent classes or classes hierarchy
- * and implement the functionality to build the css selectors using the provided cssSelectorBuilder.
- * Each selector should have the stringify() method to output the string repsentation
- * according to css specification.
- *
- * Provided cssSelectorBuilder should be used as facade only to create your own classes,
- * for example the first method of cssSelectorBuilder can be like this:
- *   element: function(value) {
- *       return new MySuperBaseElementSelector(...)...
- *   },
- *
- * The design of class(es) is totally up to you, but try to make it as simple,
- * clear and readable as possible.
+ * @param {Promise[]} array
+ * @param {Function} action
+ * @return {Promise}
  *
  * @example
+ *    const promises = [Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)];
+ *    const p = chainPromises(promises, (a, b) => a + b);
+ *    p.then((res) => {
+ *      console.log(res) // => 6
+ *    });
  *
- *  const builder = cssSelectorBuilder;
- *
- *  builder.id('main').class('container').class('editable').stringify()
- *    => '#main.container.editable'
- *
- *  builder.element('a').attr('href$=".png"').pseudoClass('focus').stringify()
- *    => 'a[href$=".png"]:focus'
- *
- *  builder.combine(
- *      builder.element('div').id('main').class('container').class('draggable'),
- *      '+',
- *      builder.combine(
- *          builder.element('table').id('data'),
- *          '~',
- *           builder.combine(
- *               builder.element('tr').pseudoClass('nth-of-type(even)'),
- *               ' ',
- *               builder.element('td').pseudoClass('nth-of-type(even)')
- *           )
- *      )
- *  ).stringify()
- *    => 'div#main.container.draggable + table#data ~ tr:nth-of-type(even)   td:nth-of-type(even)'
- *
- *  For more examples see unit tests.
  */
-
-const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  id(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  class(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  attr(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
-  },
-};
-
+function chainPromises(/* array, action */) {
+  throw new Error('Not implemented');
+}
 
 module.exports = {
-  Rectangle,
-  getJSON,
-  fromJSON,
-  cssSelectorBuilder,
-}
+  willYouMarryMe,
+  processAllPromises,
+  getFastestPromise,
+  chainPromises,
+};
