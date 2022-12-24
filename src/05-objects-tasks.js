@@ -1,149 +1,90 @@
-/* ************************************************************************************************
- *                                                                                                *
- * Please read the following tutorial before implementing tasks:                                   *
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer *
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object        *
- *                                                                                                *
- ************************************************************************************************ */
+/* *******************************************************************************************
+ *                                                                                           *
+ * Plese read the following tutorial before implementing tasks:                              *
+ * https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions            *
+ *                                                                                           *
+ * You can use the next web site in order to check and build regexps:                        *
+ * https://regexr.com                                                                        *
+ *                                                                                           *
+ ******************************************************************************************* */
 
 
 /**
- * Returns the rectangle object with width and height parameters and getArea() method
+ * Returns the regexp that matches a GUID string representation
+ * '{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}',
+ * where X is hexadecimal digit (0,1,2...,9,A,a,B,b,C,c,D,d,F,f)
  *
- * @param {number} width
- * @param {number} height
- * @return {Object}
+ * See more details: https://en.wikipedia.org/wiki/Globally_unique_identifier
  *
- * @example
- *    const r = new Rectangle(10,20);
- *    console.log(r.width);       // => 10
- *    console.log(r.height);      // => 20
- *    console.log(r.getArea());   // => 200
+ * Match :
+ *   '{3F2504E0-4F89-41D3-9A0C-0305E82C3301}'
+ *   '{21EC2020-3AEA-4069-A2DD-08002B30309D}'
+ *   '{0c74f13f-fa83-4c48-9b33-68921dd72463}'
+ *
+ *  Do not match:
+ *   '{D44EF4F4-280B47E5-91C7-261222A59621}'
+ *   '{D1A5279D-B27D-4CD4-A05E-EFDH53D08E8D}'
+ *   '{5EDEB36C-9006-467A8D04-AFB6F62CD7D2}'
+ *   '677E2553DD4D43B09DA77414DB1EB8EA'
+ *   '0c74f13f-fa83-4c48-9b33-68921dd72463'
+ *   'The roof, the roof, the roof is on fire'
+ *
+ * @return {RegExp}
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function getRegexForGuid() {
+  return /^\{[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\}$/i;
 }
 
 
 /**
- * Returns the JSON representation of specified object
+ * Returns the regexp that matches all the strings from first column
+ * but of them from the second
  *
- * @param {object} obj
- * @return {string}
+ * Match :                 Do not match:
+ * -----------             --------------
+ *  'pit'                     ' pt'
+ *  'spot'                    'Pot'
+ *  'spate'                   'peat'
+ *  'slap two'                'part'
+ *  'respite'
  *
- * @example
- *    [1,2,3]   =>  '[1,2,3]'
- *    { width: 10, height : 20 } => '{"height":10,"width":20}'
+ * NOTE : the regex length should be < 13
+ *
+ * @return {RegExp}
+ *
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getRegexForPitSpot() {
+  return /(s[pl])|pit/;
 }
 
 
 /**
- * Returns the object of specified type from JSON representation
+ * Returns the password validator regex.
+ * Regex will validate a password to make sure it meets the follwing criteria:
+ *  - At least specified characters long (argument minLength)
+ *  - Contains a lowercase letter
+ *  - Contains an uppercase letter
+ *  - Contains a number
+ *  - Valid passwords will only be alphanumeric characters.
  *
- * @param {Object} proto
- * @param {string} json
- * @return {object}
+ * @param {number} minLength
+ * @return {Regex}
  *
  * @example
- *    const r = fromJSON(Circle.prototype, '{"radius":10}');
- *
+ *   let validator = getPasswordValidator(6);
+ *   'password'.match(validator)  => false
+ *   'Pa55Word'.match(validator)  => true
+ *   'PASSw0rd'.match(validator)  => true
+ *   'PASSW0RD'.match(validator)  => false
+ *   'Pa55'.match(validator) => false
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function getPasswordValidator(minLength) {
+  return new RegExp(`^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[0-9a-zA-Z]{${minLength},}$`);
 }
-
-
-/**
- * Css selectors builder
- *
- * Each complex selector can consists of type, id, class, attribute, pseudo-class
- * and pseudo-element selectors:
- *
- *    element#id.class[attr]:pseudoClass::pseudoElement
- *              \----/\----/\----------/
- *              Can be several occurrences
- *
- * All types of selectors can be combined using the combination ' ','+','~','>' .
- *
- * The task is to design a single class, independent classes or classes hierarchy
- * and implement the functionality to build the css selectors using the provided cssSelectorBuilder.
- * Each selector should have the stringify() method to output the string representation
- * according to css specification.
- *
- * Provided cssSelectorBuilder should be used as facade only to create your own classes,
- * for example the first method of cssSelectorBuilder can be like this:
- *   element: function(value) {
- *       return new MySuperBaseElementSelector(...)...
- *   },
- *
- * The design of class(es) is totally up to you, but try to make it as simple,
- * clear and readable as possible.
- *
- * @example
- *
- *  const builder = cssSelectorBuilder;
- *
- *  builder.id('main').class('container').class('editable').stringify()
- *    => '#main.container.editable'
- *
- *  builder.element('a').attr('href$=".png"').pseudoClass('focus').stringify()
- *    => 'a[href$=".png"]:focus'
- *
- *  builder.combine(
- *      builder.element('div').id('main').class('container').class('draggable'),
- *      '+',
- *      builder.combine(
- *          builder.element('table').id('data'),
- *          '~',
- *           builder.combine(
- *               builder.element('tr').pseudoClass('nth-of-type(even)'),
- *               ' ',
- *               builder.element('td').pseudoClass('nth-of-type(even)')
- *           )
- *      )
- *  ).stringify()
- *    => 'div#main.container.draggable + table#data ~ tr:nth-of-type(even)   td:nth-of-type(even)'
- *
- *  For more examples see unit tests.
- */
-
-const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  id(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  class(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  attr(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
-  },
-};
 
 
 module.exports = {
-  Rectangle,
-  getJSON,
-  fromJSON,
-  cssSelectorBuilder,
+  getRegexForGuid,
+  getRegexForPitSpot,
+  getPasswordValidator,
 };
